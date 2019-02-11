@@ -167,6 +167,21 @@ public class GatewaySampleApplicationTests {
 	}
 
 	@Test
+	public void forwardCrossOriginOptionsRequestWorks() {
+		webClient.options()
+				.uri("/options")
+				.header("Host", "www.forwardurl.org")
+				.header("Origin", "www.differentorigin.org") // comment this line to make the test pass
+				.header("Access-Control-Request-Method", "POST")
+				.exchange()
+				.expectStatus()
+				.isOk()
+				.expectBody(String.class)
+				.consumeWith(result ->
+						assertThat(result.getResponseBody()).contains("Access-Control-Request-Method"));
+	}
+
+	@Test
 	public void complexPredicate() {
 		webClient.get()
 				.uri("/anything/png")
