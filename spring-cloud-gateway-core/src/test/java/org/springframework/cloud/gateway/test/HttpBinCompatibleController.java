@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.web.bind.annotation.GetMapping;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -70,19 +71,21 @@ public class HttpBinCompatibleController {
 		return get(exchange);
 	}
 
+	@GetMapping
+	@RequestMapping(path = "/options", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.OPTIONS)
+	public Map<String, Object> options(ServerWebExchange exchange) {
+		if (log.isDebugEnabled()) {
+			log.debug("httpbin /options");
+		}
+		return buildMapOfArgsAndHeaders(exchange);
+	}
+
 	@RequestMapping(path = "/get", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Map<String, Object> get(ServerWebExchange exchange) {
 		if (log.isDebugEnabled()) {
 			log.debug("httpbin /get");
 		}
-        HashMap<String, Object> result = new HashMap<>();
-        HashMap<String, String> params = new HashMap<>();
-        exchange.getRequest().getQueryParams().forEach((name, values) -> {
-            params.put(name, values.get(0));
-        });
-        result.put("args", params);
-        result.put("headers", getHeaders(exchange));
-        return result;
+        return buildMapOfArgsAndHeaders(exchange);
 	}
 
 	@RequestMapping(value = "/post", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -131,5 +134,16 @@ public class HttpBinCompatibleController {
 
 	public Map<String, String> getHeaders(ServerWebExchange exchange) {
 		return exchange.getRequest().getHeaders().toSingleValueMap();
+	}
+
+	private Map<String, Object> buildMapOfArgsAndHeaders(ServerWebExchange exchange) {
+		HashMap<String, Object> result = new HashMap<>();
+		HashMap<String, String> params = new HashMap<>();
+		exchange.getRequest().getQueryParams().forEach((name, values) -> {
+			params.put(name, values.get(0));
+		});
+		result.put("args", params);
+		result.put("headers", getHeaders(exchange));
+		return result;
 	}
 }
